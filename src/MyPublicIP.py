@@ -3,11 +3,11 @@ Created on Feb 28, 2014
 
 @author: Daniel Rosen
 '''
-import stun
+
 import smtplib
 import sys
 import getpass
-import socket
+from socket import error as sockerror
 from email.mime.text import MIMEText
 import argparse
 import time
@@ -15,6 +15,12 @@ import datetime
 import logging
 import signal
 
+try:
+    import stun
+except (ImportError):
+    sys.stderr.write("Error: you must install pystun: https://pypi.python.org/pypi/pystun")
+    sys.exit()
+    
 version = "1.0"
 
 def mailIP(external_ip,timestamp):
@@ -39,7 +45,7 @@ def mailIP(external_ip,timestamp):
             mailServer.quit()
         except (smtplib.SMTPServerDisconnected):
             logger.error("Server disconnect early.")
-    except (smtplib.SMTPConnectError,socket.error):
+    except (smtplib.SMTPConnectError,sockerror):
         logger.error("Could not connect to server: %s" % serverPort)
 
 
@@ -55,15 +61,12 @@ def getAccount():
     recipient = sys.stdin.readline().rstrip()
     return username,password,recipient
 
-def saveAccount(filename):
-    print "Account saved"
+def saveAccount(filename,username,password,recipient):
+    print "Saving account to file not yet implemented"
     
 def loadAccount(filename):
-    print "Account loaded"
-    username="boo"
-    password="radley"
-    recipient="fake_email"
-    return username,password,recipient
+    print "Loading account from file not yet implemented"
+    return "test","test","test"
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Send Public IP Address via Email',epilog='Author: Dan Rosen')
@@ -93,7 +96,7 @@ if __name__ == '__main__':
             sys.exit("Saving file requires a filename.")
         else:
             username,password,recipient = getAccount()
-            saveAccount(args.file)
+            saveAccount(args.file,username,password,recipient)
     else:
         if(args.file is None):
             username,password,recipient = getAccount()
