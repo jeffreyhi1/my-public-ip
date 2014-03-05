@@ -1,3 +1,4 @@
+#!/usr/bin/python
 '''
 Created on Feb 28, 2014
 
@@ -8,9 +9,11 @@ import smtplib
 import sys
 import getpass
 from socket import error as sockerror
+from socket import gethostname
 from email.mime.text import MIMEText
 import argparse
-import time
+from time import time as gettime
+from time import sleep
 import datetime
 import logging
 import signal
@@ -24,9 +27,9 @@ except (ImportError):
 version = "1.0"
 
 def mailIP(external_ip,timestamp):
-    body = "IP: "+external_ip+"\nTime: "+datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    body = "System: "+hostname+"\nIP: "+external_ip+"\nTime: "+datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
     msg = MIMEText(body)
-    msg['Subject'] = "[PublicIP] My Public IP Address"
+    msg['Subject'] = "[MyPublicIP] %s - %s" % (hostname,external_ip)
     msg['From'] = username
     msg['To'] = recipient
     
@@ -36,7 +39,7 @@ def mailIP(external_ip,timestamp):
             mailServer.login(username,password)
             try:
                 mailServer.sendmail(username,recipient,msg.as_string())
-                logger.info("Mail sent to %s" % recipient)
+                logger.info("Sent to %s" % recipient)
             except (smtplib.SMTPRecipientsRefused,smtplib.SMTPHeloError,smtplib.SMTPSenderRefused,smtplib.SMTPDataError):
                 logger.error("Could not send message to %s" % recipient)
         except (smtplib.SMTPHeloError, smtplib.SMTPAuthenticationError, smtplib.SMTPException):
@@ -109,18 +112,19 @@ if __name__ == '__main__':
     else:
         serverPort = args.server+":"+str(args.port)
     external_ip = ""
+    hostname = gethostname()
     logger.info("Server Started")
     signal.signal(signal.SIGINT, exit_handler)
     print 'Press Ctrl+C to exit'
     while True:
-        timestamp = time.time()
-        logger.info('STUN request at %s' % datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S'))
+        timestamp = gettime()
+        logger.info('STUN request')
         nat_type, new_external_ip, external_port = stun.get_ip_info()
         if(new_external_ip is None):
             logger.error('STUN request failed')
         elif(new_external_ip != external_ip):
-            logger.info('New IP address %s' % new_external_ip)
+            logger.info('New IP %s' % new_external_ip)
             mailIP(new_external_ip,timestamp)
         external_ip = new_external_ip
-        time.sleep(sleeptime)
+        sleep(sleeptime)
     
