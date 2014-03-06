@@ -40,6 +40,7 @@ def mailIP(external_ip,timestamp):
             try:
                 mailServer.sendmail(username,recipient,msg.as_string())
                 logger.info("Sent to %s" % recipient)
+                return True
             except (smtplib.SMTPRecipientsRefused,smtplib.SMTPHeloError,smtplib.SMTPSenderRefused,smtplib.SMTPDataError):
                 logger.error("Could not send message to %s" % recipient)
         except (smtplib.SMTPHeloError, smtplib.SMTPAuthenticationError, smtplib.SMTPException):
@@ -50,6 +51,7 @@ def mailIP(external_ip,timestamp):
             logger.error("Server disconnect early.")
     except (smtplib.SMTPConnectError,sockerror):
         logger.error("Could not connect to server: %s" % serverPort)
+    return False
 
 
 def exit_handler(signal,frame):
@@ -124,7 +126,7 @@ if __name__ == '__main__':
             logger.error('STUN request failed')
         elif(new_external_ip != external_ip):
             logger.info('New IP %s' % new_external_ip)
-            mailIP(new_external_ip,timestamp)
-        external_ip = new_external_ip
+            if(mailIP(new_external_ip,timestamp)):
+                external_ip = new_external_ip
         sleep(sleeptime)
     
